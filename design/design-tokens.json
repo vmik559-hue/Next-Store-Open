@@ -1,0 +1,8 @@
+{
+  "color": {
+    "light": {"bg":"#E8EDE9","surface":"#FFFFFF","surface-2":"#F3F6F4","ink":"#172235","muted":"#586274","line":"#CCD5CF","accent":"#0D6670","open":"#2B7A4B","open-soft":"#DDEFE3","reserve":"#A06E0E","reserve-soft":"#F5EAD2","avoid":"#A3413A","avoid-soft":"#F3DEDB","banner":"#172235"},
+    "dark":  {"bg":"#10161F","surface":"#18212D","surface-2":"#1E2835","ink":"#E6ECF2","muted":"#9AA7B6","line":"#2E3A4A","accent":"#58B9C2","open":"#5CC48A","open-soft":"#1C3427","reserve":"#E0AE4A","reserve-soft":"#392E16","avoid":"#E2857B","avoid-soft":"#3C2320","banner":"#223047"}
+  },
+  "font": {"display":"Archivo (condensed 82%, 700-800) for headings and big figures","body":"Public Sans 400-700","mono":"IBM Plex Mono for formulas and the memo"},
+  "layout": "Header with data bar and 7 tabs. Recommendation: 270px settings column + verdict banner, map and ranked cards side by side, trade-offs, site case. Single column below 980px."
+}

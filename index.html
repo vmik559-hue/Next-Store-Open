@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mumbai Store Site Selector | Where should the next store open?</title>
+<meta name="description" content="Free retail site-selection tool for Mumbai. Compare locations on demand, footfall, competition, rent in ₹, accessibility and cannibalisation, stress-test the answer and read every assumption. Upload your own CSV or Excel file to analyse any location in India.">
+<meta name="keywords" content="retail site selection, store location analysis, Mumbai, new store, footfall, cannibalisation, rent, India, expansion planning">
+<meta name="robots" content="index, follow">
+<!-- Replace USERNAME and REPO after publishing on GitHub Pages -->
+<link rel="canonical" href="https://USERNAME.github.io/REPO/">
+<!-- Google Search Console: paste your verification tag below, then delete this comment -->
+<!-- <meta name="google-site-verification" content="PASTE_CODE_HERE"> -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Mumbai Store Site Selector">
+<meta property="og:description" content="Rank candidate store locations on demand, rent, competition and cannibalisation, with stated assumptions and a stress test.">
+<meta property="og:url" content="https://USERNAME.github.io/REPO/">
+<meta property="og:image" content="https://USERNAME.github.io/REPO/design/figma-desktop.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0D6670">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230D6670'/%3E%3Cpath d='M16 6c-4 0-7 3-7 7 0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7zm0 10a3 3 0 110-6 3 3 0 010 6z' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..800&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/styles.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"Mumbai Store Site Selector","applicationCategory":"BusinessApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"INR"},"description":"Compare candidate retail store locations and recommend where to open next, with reasons, trade-offs, a stress test and stated assumptions."}
+</script>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div class="eyebrow">Expansion committee · Mumbai Metropolitan Region · Capex round</div>
+  <h1>Where should our next Mumbai store open?</h1>
+  <p class="lede">Every shortlisted neighbourhood is scored the same way. The model estimates each site's sales, subtracts what it would take from our existing stores, nets off rent and running costs, then ranks what's left. Change the budget, priorities or data and the recommendation updates. Locations are real; neighbourhood figures are synthetic and in Indian rupees.</p>
+  <div class="databar">
+    <span class="ds" id="dsLine">Showing <b>Mumbai sample</b></span>
+    <span class="badge" id="dataBadge">SYNTHETIC DATA</span>
+    <button class="btn primary" type="button" data-go="upload">Upload your locations</button>
+    <button class="btn" type="button" id="exportCsv">Download results (CSV)</button>
+  </div>
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button role="tab" id="t-rec" data-tab="rec" aria-controls="rec" aria-selected="true"><span class="tn">1</span>Recommendation</button>
+    <button role="tab" id="t-upload" data-tab="upload" aria-controls="upload" aria-selected="false"><span class="tn">2</span>Upload &amp; analyse</button>
+    <button role="tab" id="t-compare" data-tab="compare" aria-controls="compare" aria-selected="false"><span class="tn">3</span>Compare locations</button>
+    <button role="tab" id="t-stress" data-tab="stress" aria-controls="stress" aria-selected="false"><span class="tn">4</span>Stress test</button>
+    <button role="tab" id="t-assumptions" data-tab="assumptions" aria-controls="assumptions" aria-selected="false"><span class="tn">5</span>Assumptions</button>
+    <button role="tab" id="t-method" data-tab="method" aria-controls="method" aria-selected="false"><span class="tn">6</span>How it works</button>
+    <button role="tab" id="t-memo" data-tab="memo" aria-controls="memo" aria-selected="false"><span class="tn">7</span>Decision memo</button>
+  </nav>
+</header>
+
+<main>
+<!-- ================= 1. RECOMMENDATION ================= -->
+<section class="tab" id="rec" role="tabpanel" aria-labelledby="t-rec">
+  <div class="rec">
+    <aside class="card controls" aria-label="Decision settings">
+      <h2>Decision settings</h2>
+      <p class="hint">What management can afford and what it cares about.</p>
+      <div class="ctl" style="margin-top:4px"><label>Stores we can open</label><output id="nOut">2</output>
+        <div class="seg" id="nseg" role="group" aria-label="Stores we can open" style="grid-column:1/-1">
+          <button type="button" data-n="1" aria-pressed="false">1</button><button type="button" data-n="2" aria-pressed="true">2</button><button type="button" data-n="3" aria-pressed="false">3</button>
+        </div></div>
+      <div id="hurdleCtl"></div>
+      <div class="group">
+        <div style="display:flex;justify-content:space-between;align-items:baseline"><h3>What matters most</h3><button class="btn-link" id="resetW" type="button">Reset</button></div>
+        <p class="hint" style="margin:2px 0 0">Relative weights, scaled to 100.</p>
+        <div id="weights"></div>
+        <div class="wsum" id="wsum"></div>
+      </div>
+      <div class="group small muted">Business-model assumptions (conversion, basket, margin, cannibalisation) are on the <button class="btn-link" type="button" data-go="assumptions">Assumptions</button> tab.</div>
+    </aside>
+
+    <div style="min-width:0">
+      <div class="verdict" id="verdict" aria-live="polite"></div>
+      <div class="maplist">
+        <div class="card mapcard">
+          <p class="maptip">Click a site for its numbers. Click anywhere else on the map to test a new spot.</p>
+          <div id="map" class="map" role="region" aria-label="Map of existing stores and candidate sites"></div>
+          <svg id="mapSvg" viewBox="0 0 520 440" role="img" aria-label="Map of existing stores and candidate sites" hidden></svg>
+          <div class="legend">
+            <span><i style="background:var(--go)"></i>Open</span>
+            <span><i style="background:var(--hold)"></i>Reserve</span>
+            <span><i style="background:var(--stop)"></i>Avoid</span>
+            <span><i class="sq"></i>Our store + 5 km catchment</span>
+            <span><i class="ln"></i>Sales taken from our store</span>
+          </div>
+        </div>
+        <ol class="ranking" id="ranking" aria-label="Ranked sites"></ol>
+      </div>
+      <div class="card tradeoffs" id="tradeoffs"></div>
+      <div class="card detail" id="detail"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 2. UPLOAD ================= -->
+<section class="tab" id="upload" role="tabpanel" aria-labelledby="t-upload" hidden>
+  <div class="sec-head"><div><h2>Analyse your own locations</h2><p>Upload one sheet with your existing stores and the sites you want to assess, or add a single site below. Everything is calculated in your browser; the file never leaves your device.</p></div></div>
+  <div class="up2">
+    <div class="card pad">
+      <h3>1 · Upload a file</h3>
+      <p class="hint">CSV, XLSX or XLS. One row per location.</p>
+      <label class="drop" id="drop" tabindex="0" for="file">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
+        <strong>Drop your file here or click to choose</strong>
+        <span>Existing stores and candidate sites in one sheet</span>
+      </label>
+      <input type="file" id="file" accept=".csv,.xlsx,.xls,text/csv" hidden>
+      <div style="display:flex;gap:8px 16px;flex-wrap:wrap;margin-top:12px">
+        <a class="btn" href="data/template.csv" download>Download template</a>
+        <button class="btn" id="loadSample" type="button">Reload Mumbai sample</button>
+      </div>
+      <div id="msg" aria-live="polite"></div>
+    </div>
+    <div class="card pad">
+      <h3>Columns the file needs</h3>
+      <p class="hint">Header spelling is flexible (for example <code>latitude</code> works for <code>lat</code>). Population in people and income in ₹/month are converted automatically.</p>
+      <div class="tablewrap"><table class="dt">
+        <thead><tr><th>Column</th><th>Meaning</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td><code>name</code></td><td>Location name, unique</td><td>Borivali West</td></tr>
+          <tr><td><code>type</code></td><td><code>existing</code> or <code>candidate</code></td><td>candidate</td></tr>
+          <tr><td><code>lat</code>, <code>lng</code></td><td>Coordinates (right-click in Google Maps)</td><td>19.2307, 72.8567</td></tr>
+          <tr><td><code>population_lakh</code></td><td>Residents within about 2 km, lakh</td><td>4.0</td></tr>
+          <tr><td><code>income_k_month</code></td><td>Median household income, ₹ thousand a month</td><td>120</td></tr>
+          <tr><td><code>footfall_day</code></td><td>People passing the shopfront a day</td><td>40000</td></tr>
+          <tr><td><code>competitors</code></td><td>Supermarkets within 1.5 km</td><td>4</td></tr>
+          <tr><td><code>rent_sqft_month</code></td><td>Quoted rent, ₹ per sq ft per month</td><td>150</td></tr>
+          <tr><td><code>access_score</code></td><td>0–10: rail/metro, bus, parking, road</td><td>9</td></tr>
+          <tr><td><code>actual_sales_cr</code></td><td>Existing stores only: last year's sales, ₹ crore</td><td>30.4</td></tr>
+        </tbody></table></div>
+    </div>
+  </div>
+
+  <div class="card pad" style="margin-top:18px">
+    <h3>2 · Or test one location</h3>
+    <p class="hint">Tip: on the Recommendation map, click any spot and choose “Analyse this spot” to fill the coordinates.</p>
+    <form class="addform" id="addForm">
+      <label>Location name<input id="f-name" required placeholder="e.g. Kandivali East"></label>
+      <label>Latitude<input id="f-lat" type="number" step="any" required placeholder="19.2045"></label>
+      <label>Longitude<input id="f-lng" type="number" step="any" required placeholder="72.8710"></label>
+      <label>Population (lakh)<input id="f-pop" type="number" step="0.1" min="0" required value="3.0"></label>
+      <label>HH income ₹k/month<input id="f-inc" type="number" min="0" required value="120"></label>
+      <label>Footfall / day<input id="f-foot" type="number" step="500" min="0" required value="35000"></label>
+      <label>Competitors ≤1.5 km<input id="f-comp" type="number" min="0" required value="4"></label>
+      <label>Rent ₹/sq ft/month<input id="f-rent" type="number" min="0" required value="160"></label>
+      <label>Access 0–10<input id="f-access" type="number" min="0" max="10" required value="8"></label>
+      <button class="btn primary" type="submit" style="justify-content:center">Add and analyse</button>
+    </form>
+  </div>
+
+  <div style="margin-top:18px">
+    <div class="sec-head"><div><h2>3 · Check and edit the inputs</h2><p>Every number the model uses. Edit a cell to test a what-if, such as a lower rent quote; all tabs update.</p></div></div>
+    <div class="tablewrap"><table class="dt" id="inputs"><thead><tr>
+      <th class="sticky">Location</th><th>Type</th><th class="r">Pop. (lakh)</th><th class="r">Income ₹k/mo</th><th class="r">Footfall /day</th><th class="r">Competitors</th><th class="r">Rent ₹/sqft/mo</th><th class="r">Access 0–10</th><th class="r">Actual sales ₹cr</th><th class="r">Nearest own store</th>
+    </tr></thead><tbody></tbody></table></div>
+  </div>
+</section>
+
+<!-- ================= 3. COMPARE ================= -->
+<section class="tab" id="compare" role="tabpanel" aria-labelledby="t-compare" hidden>
+  <div class="sec-head"><div><h2>Every site, side by side</h2><p>Gross sales is what the store itself would sell. Net gain is what the chain gains after rent, running costs and the customers it would take from our existing stores. Click a row to open it on the Recommendation tab.</p></div></div>
+  <div class="tablewrap"><table class="dt" id="cmpTable"><thead><tr>
+    <th class="sticky">Location</th><th>Decision</th><th class="r">Score</th><th class="r">Footfall/day</th><th class="r">Income</th><th class="r">Competitors</th><th class="r">Rent ₹/sqft</th><th class="r">Access</th><th class="r">Gross sales</th><th>Limited by</th><th class="r">Taken from our stores</th><th class="r">Store EBITDA</th><th class="r">Net gain</th><th class="r">Capex</th><th class="r">Payback</th><th class="r">Max rent</th>
+  </tr></thead><tbody></tbody></table></div>
+  <p class="small muted" style="margin:8px 2px 0">Money in ₹ crore a year unless stated. Max rent is the highest rent at which the site still meets the payback bar.</p>
+  <div class="charts2">
+    <div class="card pad chart"><h3>Return against risk</h3><p class="hint">Up and to the left is better: more profit added, faster payback. The dashed line is the payback bar.</p><div id="scatter"></div></div>
+    <div class="card pad"><h3>The busiest street is not the best store</h3><p class="hint">Sites sorted by daily footfall, against what each adds to chain profit.</p><div id="ffchart"></div></div>
+  </div>
+</section>
+
+<!-- ================= 4. STRESS TEST ================= -->
+<section class="tab" id="stress" role="tabpanel" aria-labelledby="t-stress" hidden>
+  <div class="sec-head"><div><h2>Does the answer hold if we are wrong?</h2><p>The whole model is re-run under seven pessimistic or alternative scenarios. A site that is picked in most of them is a safe bet; one that drops out needs more checking before we sign.</p></div></div>
+  <div class="stress2">
+    <div class="card pad"><h3>How often each site is picked</h3><p class="hint">Out of seven scenarios. ★ marks today's recommendation.</p><div id="robust"></div></div>
+    <div class="tablewrap"><table class="dt" id="stressTable"><thead><tr><th>Scenario</th><th>What changes</th><th>Sites picked</th><th>Same as base?</th></tr></thead><tbody></tbody></table></div>
+  </div>
+</section>
+
+<!-- ================= 5. ASSUMPTIONS ================= -->
+<section class="tab" id="assumptions" role="tabpanel" aria-labelledby="t-assumptions" hidden>
+  <div class="sec-head"><div><h2>Assumptions register</h2><p>Every number the model takes on trust, why it was chosen, and whether the recommendation changes if it is wrong. The last column is re-calculated live: each assumption is moved in the unfavourable direction and the whole decision is re-run.</p></div></div>
+  <div class="as2">
+    <aside class="card controls">
+      <h2>Business model</h2>
+      <p class="hint">Adjustable assumptions. Every tab updates.</p>
+      <div id="assume"></div>
+      <button class="btn" id="resetA" type="button" style="margin-top:6px">Reset to defaults</button>
+    </aside>
+    <div style="min-width:0">
+      <div class="tablewrap"><table class="dt reg" id="register"><thead><tr><th>Assumption</th><th>Value used</th><th>Why this value</th><th>Basis</th><th>If it is worse…</th></tr></thead><tbody></tbody></table></div>
+      <p class="small muted" style="margin:8px 2px 0" id="regNote"></p>
+    </div>
+  </div>
+  <div class="prov">
+    <div><div class="sec-head" style="margin-bottom:10px"><div><h2 style="font-size:20px">Where the data comes from</h2></div></div>
+      <div class="tablewrap"><table class="dt" id="provTable"><thead><tr><th>Field</th><th>Status</th><th>How to replace with real data</th></tr></thead><tbody>
+        <tr><td>Neighbourhood names and coordinates</td><td class="src-real">Real</td><td>Already real (map coordinates)</td></tr>
+        <tr><td>Catchment population</td><td class="src-syn">Synthetic</td><td>Census ward data or a geo-data vendor, within 2 km</td></tr>
+        <tr><td>Household income</td><td class="src-syn">Synthetic</td><td>Market research, credit-bureau or survey data by pin code</td></tr>
+        <tr><td>Footfall per day</td><td class="src-syn">Synthetic</td><td>Manual counts (2 weekdays + weekend) or mobile-location data</td></tr>
+        <tr><td>Competitors within 1.5 km</td><td class="src-syn">Synthetic</td><td>Count supermarkets on Google Maps / site visit</td></tr>
+        <tr><td>Rent quotes</td><td class="src-syn">Synthetic</td><td>Broker quotes for the actual unit</td></tr>
+        <tr><td>Existing-store sales</td><td class="src-syn">Synthetic</td><td>Last 12 months from the finance system</td></tr>
+        <tr><td>Sales, profit, payback, score</td><td class="src-calc">Calculated</td><td>Recalculate automatically from the above</td></tr>
+      </tbody></table></div></div>
+    <div><div class="sec-head" style="margin-bottom:10px"><div><h2 style="font-size:20px">Calibration on our existing stores</h2></div></div>
+      <div class="tablewrap"><table class="dt" id="calib"><thead><tr><th>Store</th><th class="r">Model ₹cr</th><th class="r">Actual ₹cr</th><th class="r">Error</th></tr></thead><tbody></tbody></table></div>
+      <p class="small muted" style="margin:8px 2px 0" id="calibNote"></p></div>
+  </div>
+</section>
+
+<!-- ================= 6. HOW IT WORKS ================= -->
+<section class="tab" id="method" role="tabpanel" aria-labelledby="t-method" hidden>
+  <div class="sec-head"><div><h2>How the recommendation is made</h2><p>Five steps, applied to every site in the same way.</p></div></div>
+  <div class="flow">
+    <div><span class="k">Step 1</span><b>Estimate sales two ways</b>What local households can spend, and what the passing crowd can buy.</div>
+    <div><span class="k">Step 2</span><b>Take the lower, calibrate</b>Use the binding limit, scaled so the model matches our own stores' real sales.</div>
+    <div><span class="k">Step 3</span><b>Subtract cannibalisation</b>Sales moved from our nearby stores are not growth; their margin is deducted.</div>
+    <div><span class="k">Step 4</span><b>Profit and payback</b>Margin minus rent and running costs; capex divided by yearly gain.</div>
+    <div><span class="k">Step 5</span><b>Rank and pick</b>Drop sites over the payback bar, score the rest, pick one at a time.</div>
+  </div>
+  <div class="method">
+    <div class="card pad">
+      <h3>The formulas</h3>
+      <div class="formula">Wallet sales  = households × income × 12% grocery share
+               × modern-trade share × our share vs competitors
+households   = population ÷ 4
+modern share = 4% + 4% per ₹1 lakh monthly income
+our share    = pull ÷ (pull + competitors),  pull = 0.7 + 0.06 × access
+
+Traffic sales = footfall × conversion × basket × 360 days
+
+Sales        = min(wallet, traffic) × calibration factor
+Store EBITDA = sales × (gross margin − 4%) − rent − ₹1.6 cr staff &amp; utilities
+Lost margin  = sales × cannibalisation share × gross margin
+Net gain     = store EBITDA − lost margin
+Payback      = capex ÷ net gain</div>
+    </div>
+    <div class="card pad">
+      <h3>Why it is built this way</h3>
+      <ul class="reasons neu">
+        <li><strong>Two ceilings, not one.</strong> A busy commuter street with few residents and a rich suburb with little passing trade both fail, for different reasons. Taking the lower of the two stops either from looking better than it is.</li>
+        <li><strong>Calibrated on our own stores.</strong> The raw model is scaled so it reproduces what our existing stores really sell, which anchors the forecast in the chain's own performance.</li>
+        <li><strong>Chain view, not store view.</strong> A new store that mostly moves customers from our existing store adds little. Only the net gain to the chain counts.</li>
+        <li><strong>Hard bar, then judgement.</strong> The payback bar removes sites that cannot earn back their capex; the weights then reflect management's priorities among the survivors.</li>
+        <li><strong>Portfolio, not list.</strong> Picks are made one at a time and each pick is treated as an existing store when rating the next, so two new stores don't share the same shoppers.</li>
+      </ul>
+    </div>
+    <div class="card pad">
+      <h3>Key limitation</h3>
+      <p>Catchments are straight-line circles. Mumbai shoppers follow rail lines, creeks and flyovers, so true catchments are long and thin along the suburban railway. Cannibalisation and competition should be confirmed with travel-time catchments and loyalty-card data on where customers actually live before signing a lease.</p>
+      <p class="muted small">Also: the model is calibrated on only four stores, so treat sales forecasts as ±15%; economics are year-1 steady state with no ramp-up, inflation, tax or discounting.</p>
+    </div>
+    <div class="card pad">
+      <h3>Business value</h3>
+      <ul class="reasons pro">
+        <li>Every site is judged by the same rules, so the capex decision is consistent and easy to defend.</li>
+        <li>It shows trade-offs, not just a winner: why the busiest or richest site was not chosen.</li>
+        <li>The rent ceiling for each site gives the property team a walk-away number for negotiation.</li>
+        <li>The stress test shows which picks are safe and which need validation first.</li>
+        <li>New sites can be screened in minutes from a spreadsheet, before paying for surveys.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 7. MEMO ================= -->
+<section class="tab" id="memo" role="tabpanel" aria-labelledby="t-memo" hidden>
+  <div class="sec-head"><div><h2>Decision memo</h2><p>A one-page justification for the investment committee, generated from the current settings and data.</p></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="copyMemo" type="button">Copy memo</button><button class="btn" id="dlMemo" type="button">Download .txt</button></div></div>
+  <pre class="memo" id="memoText"></pre>
+</section>
+</main>
+
+<footer><span>Mumbai Store Site Selector · open-source prototype · all calculations run in your browser; uploaded files never leave your device.</span><span>₹1 lakh = ₹1,00,000 · ₹1 crore = ₹1,00,00,000 · Map © OpenStreetMap contributors © CARTO</span></footer>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
+<script src="assets/model.js" defer></script>
+<script src="assets/app.js" defer></script>
+</body>
+</html>
